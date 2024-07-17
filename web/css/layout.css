@@ -1,0 +1,97 @@
+body {
+    position: relative;
+}
+main {
+    padding: 20px;
+    min-height: 100dvh;
+}
+.header {
+    position: sticky;
+    padding: 20px 10px;
+    top: 0px;
+    background-color: #fff;
+    border-bottom: 2px solid #f5f5f5;
+}
+.headerWrap {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+.headerWrapLeft {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+}
+.headerLogo {
+    line-height: 16px;
+}
+.headerLogo > p {
+    font-weight: 700;
+    letter-spacing: 5px;
+}
+.headerLogo > small {
+    font-size: 12.5px;
+}
+.navLinks > ul {
+    display: flex;
+    margin: 0px;
+    padding: 0px;
+    gap: 1.5rem;
+    font-size: 16px;
+}
+.navLinks > ul > li {
+    list-style: none;
+    font-weight: 400;
+}
+.navLinks a,
+.navLinks a:hover {
+    color: inherit;
+    text-decoration: none;
+}
+#btnLogout {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    height: auto;
+    font-size: 12.5px;
+}
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.pageHeaderTitle {
+    display: flex;
+    align-items: center;
+}
+.pageHeader h1 {
+    font-size: 28px;
+}
+.pageHeader button {
+    width: max-content;
+}
+.table th {
+    background-color: #f5f5f5;
+}
+.tableActionWrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.tableActionWrap button {
+    padding: 0px;
+    background-color: transparent;
+    width: max-content;
+    margin: 0px;
+    font-size: 14px;
+}

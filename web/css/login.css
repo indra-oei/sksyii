@@ -1,0 +1,51 @@
+#auth {
+  position: relative;
+  min-height: 100vh;
+}
+  #loginBox {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    margin: auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+  }
+  .loginBoxHeader {
+    text-align: center;
+  }
+  .separator {
+    position: relative;
+    text-align: center;
+  }
+  .separator > span {
+    padding: 5px;
+    background-color: #fff;
+  }
+  .separator::before {
+    content: "";
+    width: 100%;
+    height: 1px;
+    position: absolute;
+    left: 0px;
+    top: 50%;
+    transform: translateY(2px);
+    background-color: #bdbdbd;
+    z-index: -1;
+  }
+  
+  @media only screen and (max-width: 876px) {
+    #loginBox {
+      top: 0px;
+      right: 0px;
+      bottom: 0px;
+      left: 0px;
+      width: 100%;
+      transform: translate(0px, 0px);
+      border-radius: 0px;
+      overflow: auto;
+    }
+  }
+  
