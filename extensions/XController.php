@@ -23,17 +23,12 @@ class XController extends Controller
         $controllerId = Yii::$app->controller->id;
         $this->enableCsrfValidation = false;
 
-        if ($controllerId != 'login')
-        {
-            if (!$this->getSession('contactId'))
-            {
+        if ($controllerId != 'login') {
+            if (!$this->getSession('contactId')) {
                 return $this->redirect($this->createUrl(['login/']));
             }
-        }
-        else
-        {
-            if ($this->getSession('contactId'))
-            {
+        } else {
+            if ($this->getSession('contactId')) {
                 return $this->redirect($this->createUrl(['user/']));
             }
         }
@@ -50,32 +45,27 @@ class XController extends Controller
     {
         $paramValue = '';
 
-        if (Yii::$app->request->isGet)
-        {
+        if (Yii::$app->request->isGet) {
             $paramValue = Yii::$app->request->getQueryParam($paramKey);
-        }
-        else if (Yii::$app->request->isPost)
-        {
+        } else if (Yii::$app->request->isPost) {
             $paramValue = Yii::$app->request->getBodyParam($paramKey);
         }
 
-        if (is_string($paramValue))
-        {
+        if (is_string($paramValue)) {
             return trim($paramValue);
         }
 
         return $paramValue;
     }
 
-    public function jsonEncode($data, $flag = false)
+    public function jsonEncode($data, $flag = false, $config = '')
     {
-        if (!$flag)
-        {
+        if (!$flag) {
             $endtime = microtime(true);
             $data['processtime'] = $endtime - $this->startTime;
         }
 
-        return Json::encode($data);
+        return Json::encode($data, $config);
     }
 
     public function getSession($name)
@@ -99,7 +89,7 @@ class XController extends Controller
     public function destroyAllSession()
     {
         $session = Yii::$app->session;
-         
+
         $session->open();
         $session->destroy();
         $session->close();

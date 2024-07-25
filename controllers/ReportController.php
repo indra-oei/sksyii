@@ -24,7 +24,12 @@ class ReportController extends XController
         $report->paymentDateStart = $this->getParam('payment_date_start') ? $this->getParam('payment_date_start') : date("Y-m-d", strtotime("-100 years"));
         $report->paymentDateEnd = $this->getParam('payment_date_end') ? date('Y-m-d', strtotime("+1 day", strtotime($this->getParam('payment_date_end')))) : date("Y-m-d", strtotime("+100 years"));
         $transactionReport = $report->getTransactionReport()['data'];
-        $dataTotal = [];
+        $dataTotal = [
+            'BASE_AMOUNT_TOTAL' => 0,
+            'SERVICE_AMOUNT_TOTAL' => 0,
+            'TAX_AMOUNT_TOTAL' => 0,
+            'GRAND_AMOUNT_TOTAL' => 0
+        ];
 
         $spreadsheet = new Spreadsheet();
         $activeWorksheet = $spreadsheet->getActiveSheet();
@@ -34,9 +39,12 @@ class ReportController extends XController
             ]
         ];
 
-        // foreach ($transactionReport as $key => $report) {
-        //     $dataTotal['']
-        // }
+        foreach ($transactionReport as $key => $report) {
+            $dataTotal['BASE_AMOUNT_TOTAL'] += $report['TOTAL'];
+            $dataTotal['SERVICE_AMOUNT_TOTAL'] += $report['SERVICE_AMOUNT'];
+            $dataTotal['TAX_AMOUNT_TOTAL'] += $report['TAX_AMOUNT'];
+            $dataTotal['GRAND_AMOUNT_TOTAL'] += $report['GRAND_TOTAL'];
+        }
 
         $data = [
             'transaction_date'      => $this->getParam('transaction_date_start') ? date("d/m/Y", strtotime($this->getParam('transaction_date_start'))) . ' - ' . date("d/m/Y", strtotime($this->getParam('transaction_date_end'))) : '-',
@@ -129,19 +137,44 @@ class ReportController extends XController
 
         $activeWorksheet->getStyle('A' . ($tableRowStart - 1) . ':G' . $tableSumRow)->applyFromArray($tableStyle);
 
-        $dir = Yii::getAlias('@app') . '/web/tmp/report/';
+        $identifier = substr(md5(uniqid(mt_rand(), true)), 0, 8);
+        $dir = Yii::getAlias('@app') . '/web/tmp/report/transaction_report_' . $identifier . '/';
+
+        if (!file_exists($dir)) {
+            mkdir($dir, 0777, true);
+        }
 
         $xlsx = new Xlsx($spreadsheet);
         $xlsx->save($dir . 'transaction_report.xlsx');
 
-        // $htmlPath = $dir . 'transaction_report.html';
+        $htmlPath = $dir . 'transaction_report.html';
+        $file = fopen($htmlPath, 'w');
 
-        // $file = fopen($htmlPath, 'w');
+        fwrite($file, Yii::$app->controller->renderPartial('@app/web/report-template/transaction-template.php', [
+            'data' => $data
+        ]));
 
-        // fwrite($file, Yii::$app->controller->render('@app/web/template/transaction-report.php', $data));
+        $pdfPath = $dir . 'transaction_report.pdf';
+        $xlsxPath = $dir . 'transaction_report.xlsx';
 
-        // $pdfPath = $dir . 'transaction_report.pdf';
+        exec("C:\wkhtmltopdf-0.12.5-1\bin\wkhtmltopdf --quiet --disable-smart-shrinking --encoding utf-8 --no-outline --page-width 210mm --page-height 330mm --margin-top 5 --margin-bottom 0 --margin-left 5 --margin-right 5 --no-outline --zoom 1 --dpi 266 --no-stop-slow-scripts \"$htmlPath\" \"$pdfPath\" ");
 
-        // exec("C:\wkhtmltopdf-0.12.5-1\bin\wkhtmltopdf --quiet --disable-smart-shrinking --encoding utf-8 --no-outline --page-width 210mm --page-height 330mm --margin-top 0 --margin-bottom 0 --margin-left 0 --margin-right 0 --no-outline --zoom 1 --dpi 266 --no-stop-slow-scripts \"$htmlPath\" \"$pdfPath\" ");
+        $xlsxFile = fopen($xlsxPath, 'r+');
+        $xlsxSize = fstat($xlsxFile)['size'];
+
+        $pdfFile = fopen($pdfPath, 'r+');
+        $pdfSize = fstat($pdfFile)['size'];
+
+        return $this->jsonEncode([
+            'dump' => $dir,
+            'spreadsheet' => [
+                'file_path' => $xlsxPath,
+                'file_size' => round($xlsxSize / 1000) . " kb"
+            ],
+            'pdf' => [
+                'file_path' => $pdfPath,
+                'file_size' => round($pdfSize / 1000) . " kb"
+            ],
+        ], false, JSON_UNESCAPED_SLASHES);
     }
 }

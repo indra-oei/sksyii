@@ -25,9 +25,14 @@
             <input id="inputPaymentDateEnd" type="date" class="form-control" onchange="recalibrateDate(event, 'inputPaymentDateStart')">
         </div>
     </div>
-    <div class="row">
+    <div class="row mb-4">
         <div class="col-4">
             <button class="btn btn-dark">Generate Report</button>
+        </div>
+    </div>
+    <div class="row">
+        <div id="downloadBtnWrapper" class="col-12">
+
         </div>
     </div>
 </form>
@@ -36,93 +41,73 @@
 </div>
 
 <script>
-    $('#reportForm').on('submit', function(e)
-    {
+    $('#reportForm').on('submit', function(e) {
         e.preventDefault();
         generateReport();
     });
 
-    function generateReport()
-    {
+    function generateReport() {
         var data = {
             transaction_date_start: $('#inputTransDateStart').val(),
             transaction_date_end: $('#inputTransDateEnd').val(),
             payment_date_start: $('#inputPaymentDateStart').val(),
             payment_date_end: $('#inputPaymentDateEnd').val()
         }
-        if (validateForm())
-        {
+        if (validateForm()) {
             generateExcelReport(data);
-            // generatePdfReport(data);
         }
     }
 
-    function generateExcelReport(data)
-    {
-        console.log(data);
+    function generateExcelReport(data) {
         $.ajax({
-            type		: 'POST',
-            data		: data,
-            dataType	: 'json',
-            url			: '<?= Yii::$app->getUrlManager()->createUrl('report/generate-excel-report') ?>',
-            success		: function(result)
-            {
-                
+            type: 'POST',
+            data: data,
+            dataType: 'json',
+            url: '<?= Yii::$app->getUrlManager()->createUrl('report/generate-excel-report') ?>',
+            success: function(result) {
+                if (result) {
+                    $('#downloadBtnWrapper').html(`
+                        <a href="${result.pdf.file_path}" target="_blank"><button type="button" class="btn btn-danger me-1">View PDF (${result.pdf.file_size})</button></a>
+                        <a href="${result.spreadsheet.file_path}" download><button type="button" class="btn btn-success">Download Excel (${result.spreadsheet.file_size})</button></a>
+                    `)
+                }
             }
         });
     }
 
-    function generatePdfReport(data)
-    {
-        $.ajax({
-            type		: 'POST',
-            data		: data,
-            dataType	: 'json',
-            url			: '<?= Yii::$app->getUrlManager()->createUrl('report/generate-pdf-report') ?>',
-            success		: function(result)
-            {
-                
-            }
-        });
-    }
-
-    function validateForm()
-    {
+    function validateForm() {
         const TransDateStart = $('#inputTransDateStart').val();
         const TransDateEnd = $('#inputTransDateEnd').val();
         const PaymentDateStart = $('#inputPaymentDateStart').val();
         const PaymentDateEnd = $('#inputPaymentDateEnd').val();
 
-        if (TransDateStart || PaymentDateStart)
-        {
+        if (TransDateStart || PaymentDateStart) {
             if (TransDateStart && !TransDateEnd) {
                 Swal.fire({
                     title: 'Wait',
-                    text : 'Transaction date end must be filled',
-                    icon : 'error',
+                    text: 'Transaction date end must be filled',
+                    icon: 'error',
                     timer: 2500
                 });
-                
+
                 return false;
             }
 
             if (PaymentDateStart && !PaymentDateEnd) {
                 Swal.fire({
                     title: 'Wait',
-                    text : 'Payment date end must be filled',
-                    icon : 'error',
+                    text: 'Payment date end must be filled',
+                    icon: 'error',
                     timer: 2500
                 });
-                
+
                 return false;
             }
-        }
-        else
-        {
+        } else {
             Swal.fire({
                 title: 'Wait',
-                text : 'Either transaction or payment date must be filled',
-                icon : 'error',
+                text: 'Either transaction or payment date must be filled',
+                icon: 'error',
                 timer: 2500
             });
 
@@ -132,25 +117,20 @@
         return true;
     }
 
-    function recalibrateDate(e, target)
-    {
+    function recalibrateDate(e, target) {
         const valueEl = $(e.target);
         const targetEl = $(`#${target}`);
         const value = valueEl.val();
         const targetValue = targetEl.val();
-        if (target === "inputTransDateStart" || target === "inputPaymentDateStart")
-        {
+        if (target === "inputTransDateStart" || target === "inputPaymentDateStart") {
             // END DATE LESS THAN START
-            if (!targetValue || moment(value).isBefore(moment(targetValue)))
-            {
+            if (!targetValue || moment(value).isBefore(moment(targetValue))) {
                 targetEl.val(value);
-            }   
+            }
         }
 
-        if (target === "inputTransDateEnd" || target === "inputPaymentDateEnd")
-        {
-            if (!targetValue || moment(value).isAfter(moment(targetValue)))
-            {
+        if (target === "inputTransDateEnd" || target === "inputPaymentDateEnd") {
+            if (!targetValue || moment(value).isAfter(moment(targetValue))) {
                 targetEl.val(value);
             }
         }
