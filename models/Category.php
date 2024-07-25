@@ -37,7 +37,7 @@ class Category extends XModel
         ";
 
         $st = $this->db->createCommand($sql);
-        $st->bindParam(':ownerId', $this->contactId);
+        $st->bindParam(':ownerId', $this->ownerId);
         $data = $st->queryAll();
 
         if ($data) {
@@ -46,9 +46,7 @@ class Category extends XModel
                 'errStr' => 'Data not found',
                 'data' => $data
             ];
-        }
-        else
-        {
+        } else {
             return [
                 'errNum' => 0,
                 'errStr' => 'Success',
@@ -113,9 +111,7 @@ class Category extends XModel
                 'errStr' => 'Data found',
                 'data' => $data
             ];
-        }
-        else
-        {
+        } else {
             return [
                 'errNum' => 1,
                 'errStr' => 'Data not found',
@@ -125,7 +121,7 @@ class Category extends XModel
     }
 
     public function update()
-    { 
+    {
         $sql = "
             BEGIN
                 sp_indra_category_update
@@ -148,7 +144,7 @@ class Category extends XModel
         $st->bindParam(':name', $this->name);
         $st->bindParam(':contactId', $this->contactId);
         $st->bindParam(':ownerId', $this->ownerId);
-        $st->execute(); 
+        $st->execute();
 
         return [
             'errNum' => $this->outNum,

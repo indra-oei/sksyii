@@ -48,7 +48,7 @@ class User extends XModel
         ";
 
         $st = $this->db->createCommand($sql);
-        $st->bindParam(':ownerId', $this->contactId);
+        $st->bindParam(':ownerId', $this->ownerId);
         $data = $st->queryAll();
 
         if ($data) {
@@ -57,9 +57,7 @@ class User extends XModel
                 'errStr' => 'Data found',
                 'data' => $data
             ];
-        }
-        else
-        {
+        } else {
             return [
                 'errNum' => 1,
                 'errStr' => 'Data not found',
@@ -131,9 +129,7 @@ class User extends XModel
                 'errStr' => 'Data found',
                 'data' => $data
             ];
-        }
-        else
-        {
+        } else {
             return [
                 'errNum' => 1,
                 'errStr' => 'Data not found',
@@ -161,12 +157,9 @@ class User extends XModel
         $st->bindParam(':ownerId', $this->contactId);
         $id = $st->queryScalar();
 
-        if ($this->password)
-        {
+        if ($this->password) {
             $password = password_hash($this->password, PASSWORD_BCRYPT);
-        }
-        else
-        {
+        } else {
             $sql = "
                 SELECT
                     iu.password

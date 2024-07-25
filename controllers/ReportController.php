@@ -24,6 +24,7 @@ class ReportController extends XController
         $report->paymentDateStart = $this->getParam('payment_date_start') ? $this->getParam('payment_date_start') : date("Y-m-d", strtotime("-100 years"));
         $report->paymentDateEnd = $this->getParam('payment_date_end') ? date('Y-m-d', strtotime("+1 day", strtotime($this->getParam('payment_date_end')))) : date("Y-m-d", strtotime("+100 years"));
         $transactionReport = $report->getTransactionReport()['data'];
+        $dataTotal = [];
 
         $spreadsheet = new Spreadsheet();
         $activeWorksheet = $spreadsheet->getActiveSheet();
@@ -33,9 +34,29 @@ class ReportController extends XController
             ]
         ];
 
+        // foreach ($transactionReport as $key => $report) {
+        //     $dataTotal['']
+        // }
+
+        $data = [
+            'transaction_date'      => $this->getParam('transaction_date_start') ? date("d/m/Y", strtotime($this->getParam('transaction_date_start'))) . ' - ' . date("d/m/Y", strtotime($this->getParam('transaction_date_end'))) : '-',
+            'payment_date'          => $this->getParam('payment_date_start') ? date("d/m/Y", strtotime($this->getParam('payment_date_start'))) . ' - ' . date("d/m/Y", strtotime($this->getParam('payment_date_end'))) : '-',
+            'print_by'              => Yii::$app->session->get('contactName'),
+            'print_date'            => date('Y-m-d H:i:s'),
+            'transaction_report'    => $transactionReport,
+            'data_total'            => $dataTotal
+        ];
+
         $tableHeaderStyle = [
             'font' => [
                 'bold' => true
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'ffcdcdcd']
             ],
         ];
 
@@ -49,9 +70,9 @@ class ReportController extends XController
 
         // Header
         $activeWorksheet->setCellValue('A1', 'TRANSACTION REPORT');
-        $activeWorksheet->setCellValue('A2', 'Transaction Date: ');
-        $activeWorksheet->setCellValue('A3', 'Payment Date: ');
-        $activeWorksheet->setCellValue('A4', 'Printed By: ');
+        $activeWorksheet->setCellValue('A2', 'Transaction Date');
+        $activeWorksheet->setCellValue('A3', 'Payment Date');
+        $activeWorksheet->setCellValue('A4', 'Printed By');
 
         // Header Value
         $activeWorksheet->setCellValue('B2', $this->getParam('transaction_date_start') ? date("d/m/Y", strtotime($this->getParam('transaction_date_start'))) . ' - ' . date("d/m/Y", strtotime($this->getParam('transaction_date_end'))) : '-');
@@ -81,8 +102,7 @@ class ReportController extends XController
         $currentTableRow = $tableRowStart;
 
         // Render Table Content
-        for ($i = 0; $i < COUNT($transactionReport); $i++)
-        {
+        for ($i = 0; $i < COUNT($transactionReport); $i++) {
             $activeWorksheet->setCellValue('A' . $currentTableRow, $transactionReport[$i]['ORDER_NO']);
             $activeWorksheet->setCellValue('B' . $currentTableRow, $transactionReport[$i]['TRANSACTION_DATE']);
             $activeWorksheet->setCellValue('C' . $currentTableRow, $transactionReport[$i]['PAYMENT_DATE']);
@@ -96,29 +116,32 @@ class ReportController extends XController
         }
 
         $tableRowEnd = $tableSumRow - 1;
-        
+
         // Render Total Row
-        $activeWorksheet->setCellValue('A'.$tableSumRow, 'Total');
-        $activeWorksheet->mergeCells('A'.$tableSumRow.':C'.$tableSumRow)->getStyle('A'.$tableSumRow.':C'.$tableSumRow)->getFont()->setBold(true);
+        $activeWorksheet->setCellValue('A' . $tableSumRow, 'Total');
+        $activeWorksheet->mergeCells('A' . $tableSumRow . ':C' . $tableSumRow)->getStyle('A' . $tableSumRow . ':C' . $tableSumRow)->applyFromArray($tableHeaderStyle);
 
         // Calculate Total
-        $activeWorksheet->setCellValue('D'.$tableSumRow, '=SUM(D'.$tableRowStart.':D'.$tableRowEnd.')');
-        $activeWorksheet->setCellValue('E'.$tableSumRow, '=SUM(E'.$tableRowStart.':E'.$tableRowEnd.')');
-        $activeWorksheet->setCellValue('F'.$tableSumRow, '=SUM(F'.$tableRowStart.':F'.$tableRowEnd.')');
-        $activeWorksheet->setCellValue('G'.$tableSumRow, '=SUM(G'.$tableRowStart.':G'.$tableRowEnd.')');
+        $activeWorksheet->setCellValue('D' . $tableSumRow, '=SUM(D' . $tableRowStart . ':D' . $tableRowEnd . ')');
+        $activeWorksheet->setCellValue('E' . $tableSumRow, '=SUM(E' . $tableRowStart . ':E' . $tableRowEnd . ')');
+        $activeWorksheet->setCellValue('F' . $tableSumRow, '=SUM(F' . $tableRowStart . ':F' . $tableRowEnd . ')');
+        $activeWorksheet->setCellValue('G' . $tableSumRow, '=SUM(G' . $tableRowStart . ':G' . $tableRowEnd . ')');
 
-        $activeWorksheet->getStyle('A'.($tableRowStart - 1).':G'.$tableSumRow)->applyFromArray($tableStyle);
+        $activeWorksheet->getStyle('A' . ($tableRowStart - 1) . ':G' . $tableSumRow)->applyFromArray($tableStyle);
 
         $dir = Yii::getAlias('@app') . '/web/tmp/report/';
 
-        dd('../../'.Yii::getAlias('@app') );
+        $xlsx = new Xlsx($spreadsheet);
+        $xlsx->save($dir . 'transaction_report.xlsx');
 
-        // $xlsx = new Xlsx($spreadsheet);
-        // $xlsx->save($dir . 'transaction_report.xlsx');
+        // $htmlPath = $dir . 'transaction_report.html';
 
-        // $html = new Html($spreadsheet);
-        // $html->save($dir . 'transaction_report.html');
+        // $file = fopen($htmlPath, 'w');
 
-        // exec('C:\wkhtmltopdf-0.12.5-1\bin' . " --quiet --dis able-smart-shrinking --encoding utf-8 --no-outline --margin-top 0 --margin-bottom 0 --margin-left 0 --margin-right 0 --no-outline --dpi 266 --no-stop-slow-scripts \"$dir . transaction_report.html\" \"$dir . transaction_report.pdf\" ");
+        // fwrite($file, Yii::$app->controller->render('@app/web/template/transaction-report.php', $data));
+
+        // $pdfPath = $dir . 'transaction_report.pdf';
+
+        // exec("C:\wkhtmltopdf-0.12.5-1\bin\wkhtmltopdf --quiet --disable-smart-shrinking --encoding utf-8 --no-outline --page-width 210mm --page-height 330mm --margin-top 0 --margin-bottom 0 --margin-left 0 --margin-right 0 --no-outline --zoom 1 --dpi 266 --no-stop-slow-scripts \"$htmlPath\" \"$pdfPath\" ");
     }
 }
